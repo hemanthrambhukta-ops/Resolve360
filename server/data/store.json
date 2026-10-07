@@ -1,6 +1,36 @@
 {
   "tickets": [
     {
+      "id": "01d8a85a-1c19-44ee-b020-598edf4a1586",
+      "ticket_code": "RES-2026-6307",
+      "user_id": "d0000000-0000-0000-0000-000000000001",
+      "title": "PostgreSQL Connection Pool Saturation & Gateway 503 Outage",
+      "domain": "Database",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "confidence_score": 0.94,
+      "problem_summary": "Elevated connection concurrency exhausted PostgreSQL max_connections capacity, causing upstream API gateways to reject customer transactions with HTTP 503 and acquire timeout exceptions.",
+      "detected_errors": [
+        {
+          "error_code": "FATAL: remaining connection slots are reserved for non-replication superuser connections",
+          "source_modality": "LOG",
+          "file_name": "postgres_cluster.log",
+          "description": "All client connection slots occupied by lingering idle transactions."
+        },
+        {
+          "error_code": "HTTP 503 Service Unavailable",
+          "source_modality": "IMAGE",
+          "file_name": "checkout_error.png",
+          "description": "Visual checkout banner displaying payment gateway connection refusal."
+        }
+      ],
+      "possible_root_cause": "Direct microservice connections without a connection pooler (PgBouncer); connection leak in backend job.",
+      "user_resolution": "1. Please wait 2-3 minutes while server connections are recycled.\n2. Refresh the browser and retry checkout.\n3. The backend team has expanded connection bandwidth.",
+      "technical_resolution": "1. Scale PgBouncer pool_size and transaction pooling:\n   max_client_conn = 1000\n   default_pool_size = 50\n2. Kill idle connections:\n   SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE state = 'idle in transaction' AND state_change < now() - INTERVAL '5 minutes';\n3. Set idle_in_transaction_session_timeout = '30s' in postgresql.conf.",
+      "created_at": "2026-10-07T08:54:34.517Z",
+      "updated_at": "2026-10-07T08:54:34.517Z"
+    },
+    {
       "id": "ca57a5b8-8198-48a4-b463-6d39bc780af5",
       "ticket_code": "RES-2026-4856",
       "user_id": "d0000000-0000-0000-0000-000000000001",
@@ -149,6 +179,15 @@
       "correlation_type": "CONTEXTUAL_LINK",
       "description": "Symptom description matches exception patterns observed in diagnostic payloads.",
       "created_at": "2026-10-07T07:20:08.468Z"
+    },
+    {
+      "id": "d66fd7a3-ffef-40af-8ff4-5fbbeda782d5",
+      "ticket_id": "01d8a85a-1c19-44ee-b020-598edf4a1586",
+      "source_evidence_id": null,
+      "target_evidence_id": null,
+      "correlation_type": "TIMESTAMP_MATCH",
+      "description": "Log exception timestamp matches customer checkout failure dialog within milliseconds.",
+      "created_at": "2026-10-07T08:54:34.517Z"
     }
   ],
   "knowledge_base": [

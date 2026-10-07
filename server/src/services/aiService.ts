@@ -76,9 +76,7 @@ export interface MediaPart {
 
 const CANDIDATE_MODELS = [
   'gemini-3.8-flash',
-  'gemini-flash-latest',
-  'gemini-3.5-flash',
-  'gemini-2.5-flash'
+  'gemini-flash-latest'
 ];
 
 export async function runMultimodalResolution(
@@ -96,46 +94,44 @@ export async function runMultimodalResolution(
     });
   }
 
-  // Attempt generation with available models and backoff
+  // Attempt generation with available models and fast fallback
   for (const modelName of CANDIDATE_MODELS) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        console.log(`Querying ${modelName} (attempt ${attempt})...`);
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: [
-            {
-              role: 'user',
-              parts,
-            },
-          ],
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            responseMimeType: 'application/json',
-            responseSchema: ticketResolutionResponseSchema,
-            temperature: 0.2,
+    try {
+      console.log(`Querying ${modelName}...`);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 3500)
+      );
+
+      const generatePromise = ai.models.generateContent({
+        model: modelName,
+        contents: [
+          {
+            role: 'user',
+            parts,
           },
-        });
+        ],
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTION,
+          responseMimeType: 'application/json',
+          responseSchema: ticketResolutionResponseSchema,
+          temperature: 0.2,
+        },
+      });
 
-        const rawText = response.text || '{}';
-        const parsed = JSON.parse(rawText);
+      const response = await Promise.race([generatePromise, timeoutPromise]);
+      const rawText = response.text || '{}';
+      const parsed = JSON.parse(rawText);
 
-        if (typeof parsed.confidence_score === 'number') {
-          parsed.confidence_score = Math.min(1.0, Math.max(0.0, Number(parsed.confidence_score.toFixed(2))));
-        } else {
-          parsed.confidence_score = 0.92;
-        }
-
-        console.log(`Successfully generated resolution using ${modelName}`);
-        return parsed as TicketResolutionAI;
-      } catch (err: any) {
-        console.warn(`Attempt with ${modelName} returned notice (${err.message}). Retrying...`);
-        if (err.message?.includes('404')) {
-          // Model does not exist, move to next model immediately
-          break;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      if (typeof parsed.confidence_score === 'number') {
+        parsed.confidence_score = Math.min(1.0, Math.max(0.0, Number(parsed.confidence_score.toFixed(2))));
+      } else {
+        parsed.confidence_score = 0.92;
       }
+
+      console.log(`Successfully generated resolution using ${modelName}`);
+      return parsed as TicketResolutionAI;
+    } catch (err: any) {
+      console.warn(`Query ${modelName} returned notice (${err.message}). Moving to next...`);
     }
   }
 
