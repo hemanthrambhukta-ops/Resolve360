@@ -1,6 +1,7 @@
 import { Ticket, EvidenceFile, EvidenceCorrelation, KnowledgeBaseItem, UserProfile } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+const API_BASE_URL = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
 
 export interface ResolveResponse {
   success: boolean;
@@ -10,10 +11,26 @@ export interface ResolveResponse {
 }
 
 export async function resolveIssue(formData: FormData): Promise<ResolveResponse> {
-  const response = await fetch(`${API_BASE_URL}/resolve`, {
+  let response = await fetch(`${API_BASE_URL}/resolve`, {
     method: 'POST',
     body: formData,
   });
+
+  // If 404, fallback try root /resolve endpoint directly
+  if (response.status === 404 && API_BASE_URL.endsWith('/api')) {
+    const fallbackUrl = API_BASE_URL.replace(/\/api$/, '') + '/resolve';
+    try {
+      const fallbackResponse = await fetch(fallbackUrl, {
+        method: 'POST',
+        body: formData,
+      });
+      if (fallbackResponse.ok) {
+        return fallbackResponse.json();
+      }
+    } catch {
+      // ignore fallback error and handle original response
+    }
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

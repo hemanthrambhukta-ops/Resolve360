@@ -1,6 +1,30 @@
 {
   "tickets": [
     {
+      "id": "ff242443-4968-4354-9fc7-d685ad866be4",
+      "ticket_code": "RES-2026-5199",
+      "user_id": "d0000000-0000-0000-0000-000000000001",
+      "title": "Multimodal Diagnostic Incident Analysis",
+      "domain": "Software",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "confidence_score": 0.88,
+      "problem_summary": "Synthesized findings from heterogeneous inputs. Problem details: \nDIAGNOSTIC EVIDENCE SUBMISSION:\nUser Problem Statement: \"I'm getting error in python code. can you explain the error and how to correct it.\"\nUser Sel...",
+      "detected_errors": [
+        {
+          "error_code": "EX_RUNTIME_FAULT",
+          "source_modality": "LOG",
+          "file_name": "diagnostic_payload",
+          "description": "Runtime anomaly identified in system event stream."
+        }
+      ],
+      "possible_root_cause": "Resource constraint or unhandled exception state across application components.",
+      "user_resolution": "1. Clear browser application cache.\n2. Restart the local client session.\n3. Retry the operation.",
+      "technical_resolution": "1. Inspect process utilization: `Get-Process | Sort-Object CPU -Descending`\n2. Verify upstream service endpoints and DNS resolution.\n3. Check daemon journal logs for stack traces.",
+      "created_at": "2026-10-07T09:47:21.149Z",
+      "updated_at": "2026-10-07T09:47:21.149Z"
+    },
+    {
       "id": "01d8a85a-1c19-44ee-b020-598edf4a1586",
       "ticket_code": "RES-2026-6307",
       "user_id": "d0000000-0000-0000-0000-000000000001",
@@ -188,6 +212,15 @@
       "correlation_type": "TIMESTAMP_MATCH",
       "description": "Log exception timestamp matches customer checkout failure dialog within milliseconds.",
       "created_at": "2026-10-07T08:54:34.517Z"
+    },
+    {
+      "id": "d9a150f1-918d-4da0-9f3a-c9f5afaa3df3",
+      "ticket_id": "ff242443-4968-4354-9fc7-d685ad866be4",
+      "source_evidence_id": null,
+      "target_evidence_id": null,
+      "correlation_type": "CONTEXTUAL_LINK",
+      "description": "Observed user symptoms correlate with error logs.",
+      "created_at": "2026-10-07T09:47:21.148Z"
     }
   ],
   "knowledge_base": [

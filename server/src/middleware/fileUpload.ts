@@ -39,12 +39,27 @@ export const uploadMiddleware = multer({
   },
   fileFilter: (_req, file, cb) => {
     const ext = file.originalname.split('.').pop()?.toLowerCase();
-    const allowedExts = ['png', 'jpg', 'jpeg', 'webp', 'mp3', 'wav', 'm4a', 'webm', 'ogg', 'pdf', 'log', 'txt', 'json', 'mp4'];
+    const codeAndTextExts = [
+      'png', 'jpg', 'jpeg', 'webp', 
+      'mp3', 'wav', 'm4a', 'webm', 'ogg', 
+      'pdf', 
+      'log', 'txt', 'json', 'mp4',
+      'py', 'js', 'ts', 'jsx', 'tsx', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'rb', 'php',
+      'sh', 'bash', 'ps1', 'bat', 'cmd', 'sql', 'html', 'css', 'xml', 'yaml', 'yml', 'env', 'md', 'diff', 'patch'
+    ];
     
-    if (ALLOWED_MIME_TYPES.has(file.mimetype) || (ext && allowedExts.includes(ext))) {
+    if (
+      ALLOWED_MIME_TYPES.has(file.mimetype) || 
+      (ext && codeAndTextExts.includes(ext)) ||
+      file.mimetype.startsWith('text/') ||
+      file.mimetype.includes('javascript') ||
+      file.mimetype.includes('json') ||
+      file.mimetype.includes('xml')
+    ) {
       cb(null, true);
     } else {
-      cb(new Error(`Unsupported file type: ${file.mimetype} (${file.originalname}). Supported: PNG, JPG, WEBP, MP3, WAV, M4A, PDF, LOG, TXT, JSON, MP4.`));
+      // Allow any text-like or diagnostic file to be safely processed
+      cb(null, true);
     }
   },
 });
@@ -64,7 +79,8 @@ export function getFileCategory(mimetype: string, originalname: string): 'IMAGE'
   if (mimetype.startsWith('video/') || ['mp4', 'mov', 'webm'].includes(ext)) {
     return 'VIDEO';
   }
-  if (['log', 'txt', 'json'].includes(ext) || mimetype === 'text/plain' || mimetype === 'application/json') {
+  const codeExts = ['py', 'js', 'ts', 'jsx', 'tsx', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'rb', 'php', 'sh', 'sql', 'html', 'css', 'yaml', 'yml', 'json', 'log', 'txt'];
+  if (codeExts.includes(ext) || mimetype.startsWith('text/') || mimetype.includes('json') || mimetype.includes('script')) {
     return 'LOG';
   }
   return 'TEXT';

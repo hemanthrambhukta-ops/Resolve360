@@ -204,6 +204,34 @@ function synthesizeDomainHeuristic(prompt: string, mediaParts: MediaPart[]): Tic
     };
   }
 
+  if (lower.includes('python') || lower.includes('syntaxerror') || lower.includes('traceback') || lower.includes('nameerror') || lower.includes('typeerror') || lower.includes('.py') || lower.includes('indentation')) {
+    return {
+      title: "Python Script Execution & Traceback Exception Analysis",
+      domain: "Software",
+      severity: "MEDIUM",
+      confidence_score: 0.94,
+      problem_summary: "Python script failed during evaluation or runtime execution. Diagnosed from source code structure, traceback logs, and user problem statement.",
+      detected_errors: [
+        {
+          error_code: "Traceback / Runtime Exception",
+          source_modality: "LOG",
+          file_name: "source_code.py",
+          description: "Exception triggered during script execution or module compilation."
+        }
+      ],
+      possible_root_cause: "Mismatched indentation, undefined variable/module, unhandled exception, or type conflict in function arguments.",
+      evidence_correlations: [
+        {
+          file_a: "source_code.py",
+          file_b: "user_description",
+          connection_details: "Reported problem statement matches exception point in source code."
+        }
+      ],
+      user_resolution: "1. Open the file and inspect the exact line cited in the error traceback.\n2. Ensure indentation uses 4 spaces consistently throughout the file (no tabs).\n3. Install any missing dependencies in your environment using pip install <package_name>.",
+      technical_resolution: "1. Compile-check syntax without executing: `python -m py_compile script.py`\n2. Run automated static analysis: `ruff check script.py` or `pylint script.py`\n3. Ensure virtual environment isolation: `python -m venv .venv && .\\.venv\\Scripts\\Activate.ps1 && pip install -r requirements.txt`"
+    };
+  }
+
   return {
     title: "Multimodal Diagnostic Incident Analysis",
     domain: "Software",

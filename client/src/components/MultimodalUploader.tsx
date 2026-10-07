@@ -47,7 +47,8 @@ export const MultimodalUploader: React.FC<MultimodalUploaderProps> = ({
     if (file.type.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'webm', 'ogg'].includes(ext)) return 'AUDIO';
     if (file.type === 'application/pdf' || ext === 'pdf') return 'PDF';
     if (file.type.startsWith('video/') || ['mp4', 'webm', 'mov'].includes(ext)) return 'VIDEO';
-    if (['log', 'txt', 'json'].includes(ext)) return 'LOG';
+    const codeExts = ['py', 'js', 'ts', 'jsx', 'tsx', 'java', 'cpp', 'c', 'h', 'cs', 'go', 'rs', 'rb', 'php', 'sh', 'sql', 'html', 'css', 'yaml', 'yml', 'json', 'log', 'txt'];
+    if (codeExts.includes(ext) || file.type.startsWith('text/')) return 'LOG';
     return 'TEXT';
   };
 
@@ -261,7 +262,7 @@ FAILURE_BUCKET_ID: 0x3B_nvlddmkm+43a210`;
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.webm,.pdf,.log,.txt,.json,.mp4"
+          accept=".png,.jpg,.jpeg,.webp,.mp3,.wav,.m4a,.webm,.pdf,.log,.txt,.json,.mp4,.py,.js,.ts,.jsx,.tsx,.java,.cpp,.c,.cs,.go,.rs,.rb,.php,.sh,.sql,.html,.css,.yaml,.yml,.md"
           className="hidden"
           onChange={(e) => {
             if (e.target.files) handleFilesAdded(e.target.files);

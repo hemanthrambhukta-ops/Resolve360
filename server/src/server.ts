@@ -32,14 +32,21 @@ app.use('/uploads', express.static(uploadsDir));
 // Global Auth Context Middleware
 app.use(authMiddleware);
 
-// API Routes
+// API Routes (mounted with /api prefix and direct aliases)
 app.use('/api/auth', authRouter);
+app.use('/auth', authRouter);
+
 app.use('/api/resolve', resolveRouter);
+app.use('/resolve', resolveRouter);
+
 app.use('/api/tickets', ticketRouter);
+app.use('/tickets', ticketRouter);
+
 app.use('/api/knowledge-base', kbRouter);
+app.use('/knowledge-base', kbRouter);
 
 // Health check endpoint
-app.get('/api/health', (_req: Request, res: Response) => {
+app.get(['/api/health', '/health'], (_req: Request, res: Response) => {
   res.json({
     status: 'online',
     platform: 'Resolve 360 Multimodal Support Engine',
