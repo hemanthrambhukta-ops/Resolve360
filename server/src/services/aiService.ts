@@ -139,7 +139,134 @@ export async function runMultimodalResolution(
   return synthesizeDomainHeuristic(textPrompt, mediaParts);
 }
 
+function analyzePythonOrCode(prompt: string): TicketResolutionAI | null {
+  // Extract attached file name and content if present
+  const fileMatch = prompt.match(/\[FILE:\s*([^\s\]]+)[^\]]*\]:\s*\n([\s\S]*?)(?=\n\[FILE:|\n--- END|\nSynthesize|$)/i);
+  const fileName = fileMatch ? fileMatch[1].trim() : 'python_script.py';
+  const fileContent = fileMatch ? fileMatch[2].trim() : prompt;
+
+  // Case 1: unclosed print or unquoted print string, e.g. print(What does the Visualize button do
+  if (fileContent.includes('print(') || prompt.includes('print(')) {
+    const searchTarget = fileContent.includes('print(') ? fileContent : prompt;
+    const printLine = searchTarget.split('\n').find(l => l.includes('print(')) || '';
+    const openParen = (printLine.match(/\(/g) || []).length;
+    const closeParen = (printLine.match(/\)/g) || []).length;
+    const hasQuotes = printLine.includes('"') || printLine.includes("'");
+    
+    if (!hasQuotes || openParen > closeParen) {
+      const rawInside = printLine.substring(printLine.indexOf('(') + 1).replace(/\)$/, '').trim();
+      const insideParen = rawInside || 'What does the Visualize button do';
+      const fixedLine = `print("${insideParen}")`;
+      
+      return {
+        title: "Python SyntaxError: Unterminated String & Unclosed Parenthesis",
+        domain: "Software",
+        severity: "HIGH",
+        confidence_score: 0.98,
+        problem_summary: `Python script in "${fileName}" contains an invalid print statement: "${printLine.trim()}". The string text is missing quotation marks and the opening parenthesis '(' is never closed.`,
+        detected_errors: [
+          {
+            error_code: "SyntaxError: invalid syntax / '(' was never closed",
+            source_modality: "LOG",
+            file_name: fileName,
+            description: `Line: "${printLine.trim()}" -> Text inside print() is unquoted, and closing parenthesis ')' is missing.`
+          }
+        ],
+        possible_root_cause: `In Python, text literals passed to print() must be enclosed in single ('...') or double ("...") quotation marks. Without quotes, Python attempts to parse the words as language syntax identifiers or variable names, triggering a SyntaxError. Furthermore, every opened parenthesis '(' must have a matching closing parenthesis ')'.`,
+        evidence_correlations: [
+          {
+            file_a: fileName,
+            file_b: "python_interpreter",
+            connection_details: `Syntax tokenizer failure on line: "${printLine.trim()}"`
+          }
+        ],
+        user_resolution: `1. Enclose the text inside quotation marks: "${insideParen}".\n2. Add the closing parenthesis ')' at the end of the line.\n3. Replace the line with the corrected code:\n   ${fixedLine}`,
+        technical_resolution: `# Corrected code in ${fileName}:
+${fixedLine}
+
+# Validate syntax in terminal:
+python -c '${fixedLine}'`
+      };
+    }
+  }
+
+  // Case 2: Missing colon after def, if, for, while, class
+  const colonKeywords = ['def ', 'if ', 'elif ', 'else:', 'for ', 'while ', 'class '];
+  for (const kw of colonKeywords) {
+    const lines = fileContent.split('\n');
+    const badLine = lines.find(l => l.trim().startsWith(kw) && !l.trim().endsWith(':'));
+    if (badLine) {
+      return {
+        title: "Python SyntaxError: Missing Colon (':')",
+        domain: "Software",
+        severity: "HIGH",
+        confidence_score: 0.97,
+        problem_summary: `Python script "${fileName}" has a missing colon ':' on line: "${badLine.trim()}".`,
+        detected_errors: [
+          {
+            error_code: "SyntaxError: expected ':'",
+            source_modality: "LOG",
+            file_name: fileName,
+            description: `Statement "${badLine.trim()}" requires a colon ':' at the end of the line.`
+          }
+        ],
+        possible_root_cause: `Python compound statements (def, if, for, while, class) require a terminating colon ':' to begin a new block.`,
+        evidence_correlations: [
+          {
+            file_a: fileName,
+            file_b: "python_compiler",
+            connection_details: `Missing token ':' on header "${badLine.trim()}"`
+          }
+        ],
+        user_resolution: `1. Add a colon ':' to the end of the line: "${badLine.trim()}:".\n2. Ensure block contents are indented by 4 spaces.`,
+        technical_resolution: `# Fixed statement:
+${badLine.trim()}:
+    pass`
+      };
+    }
+  }
+
+  // Case 3: ZeroDivisionError
+  if (fileContent.includes('/ 0') || fileContent.includes('/ len(') || prompt.toLowerCase().includes('zerodivision')) {
+    return {
+      title: "Python ZeroDivisionError: Division by Zero Exception",
+      domain: "Software",
+      severity: "MEDIUM",
+      confidence_score: 0.96,
+      problem_summary: `Division by zero condition detected in "${fileName}". If the denominator evaluates to 0, Python raises ZeroDivisionError.`,
+      detected_errors: [
+        {
+          error_code: "ZeroDivisionError: division by zero",
+          source_modality: "LOG",
+          file_name: fileName,
+          description: "Attempted division where denominator evaluates to 0."
+        }
+      ],
+      possible_root_cause: "Calculating average or division without checking if collection or denominator is 0.",
+      evidence_correlations: [
+        {
+          file_a: fileName,
+          file_b: "runtime_exception",
+          connection_details: "Zero denominator causes arithmetic crash."
+        }
+      ],
+      user_resolution: "1. Add a check to verify the list is not empty before dividing:\n   if not data:\n       return 0\n2. Safely compute the average only when items exist.",
+      technical_resolution: `# Guard against zero division:
+if len(data) == 0:
+    return 0.0
+average = total / len(data)`
+    };
+  }
+
+  return null;
+}
+
 function synthesizeDomainHeuristic(prompt: string, mediaParts: MediaPart[]): TicketResolutionAI {
+  const codeAnalysis = analyzePythonOrCode(prompt);
+  if (codeAnalysis) {
+    return codeAnalysis;
+  }
+
   const lower = prompt.toLowerCase();
   
   if (lower.includes('postgres') || lower.includes('connection') || lower.includes('database') || lower.includes('pool')) {

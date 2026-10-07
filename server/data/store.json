@@ -1,6 +1,54 @@
 {
   "tickets": [
     {
+      "id": "7a1ac236-2bf9-45c2-8409-425089b7b704",
+      "ticket_code": "RES-2026-9763",
+      "user_id": "d0000000-0000-0000-0000-000000000001",
+      "title": "Python SyntaxError: Unterminated String & Unclosed Parenthesis",
+      "domain": "Software",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "confidence_score": 0.98,
+      "problem_summary": "Python script in \"test_visualize.py\" contains an invalid print statement: \"print(What does the Visualize button do\". The string text is missing quotation marks and the opening parenthesis '(' is never closed.",
+      "detected_errors": [
+        {
+          "error_code": "SyntaxError: invalid syntax / '(' was never closed",
+          "source_modality": "LOG",
+          "file_name": "test_visualize.py",
+          "description": "Line: \"print(What does the Visualize button do\" -> Text inside print() is unquoted, and closing parenthesis ')' is missing."
+        }
+      ],
+      "possible_root_cause": "In Python, text literals passed to print() must be enclosed in single ('...') or double (\"...\") quotation marks. Without quotes, Python attempts to parse the words as language syntax identifiers or variable names, triggering a SyntaxError. Furthermore, every opened parenthesis '(' must have a matching closing parenthesis ')'.",
+      "user_resolution": "1. Enclose the text inside quotation marks: \"What does the Visualize button do\".\n2. Add the closing parenthesis ')' at the end of the line.\n3. Replace the line with the corrected code:\n   print(\"What does the Visualize button do\")",
+      "technical_resolution": "# Corrected code in test_visualize.py:\nprint(\"What does the Visualize button do\")\n\n# Validate syntax in terminal:\npython -c 'print(\"What does the Visualize button do\")'",
+      "created_at": "2026-10-07T10:13:16.740Z",
+      "updated_at": "2026-10-07T10:13:16.740Z"
+    },
+    {
+      "id": "52f5afe0-5ff9-43b4-bba8-3562847c110e",
+      "ticket_code": "RES-2026-3279",
+      "user_id": "d0000000-0000-0000-0000-000000000001",
+      "title": "Python Script Execution & Traceback Exception Analysis",
+      "domain": "Software",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "confidence_score": 0.94,
+      "problem_summary": "Python script failed during evaluation or runtime execution. Diagnosed from source code structure, traceback logs, and user problem statement.",
+      "detected_errors": [
+        {
+          "error_code": "Traceback / Runtime Exception",
+          "source_modality": "LOG",
+          "file_name": "source_code.py",
+          "description": "Exception triggered during script execution or module compilation."
+        }
+      ],
+      "possible_root_cause": "Mismatched indentation, undefined variable/module, unhandled exception, or type conflict in function arguments.",
+      "user_resolution": "1. Open the file and inspect the exact line cited in the error traceback.\n2. Ensure indentation uses 4 spaces consistently throughout the file (no tabs).\n3. Install any missing dependencies in your environment using pip install <package_name>.",
+      "technical_resolution": "1. Compile-check syntax without executing: `python -m py_compile script.py`\n2. Run automated static analysis: `ruff check script.py` or `pylint script.py`\n3. Ensure virtual environment isolation: `python -m venv .venv && .\\.venv\\Scripts\\Activate.ps1 && pip install -r requirements.txt`",
+      "created_at": "2026-10-07T09:51:17.240Z",
+      "updated_at": "2026-10-07T09:51:17.240Z"
+    },
+    {
       "id": "ff242443-4968-4354-9fc7-d685ad866be4",
       "ticket_code": "RES-2026-5199",
       "user_id": "d0000000-0000-0000-0000-000000000001",
@@ -183,6 +231,26 @@
       "file_size": 284,
       "extracted_context": "2026-10-07 12:48:02 [ERROR] [auth-service] JWT token signature verification failed for user_id=98f821a. Error: signature has expired at timestamp 1791269000.\n2026-10-07 12:48:03 [FATAL] [api-gateway] Upstream connection pool exhausted: 504 Gateway Timeout on /v1/checkout/authorize.\r\n",
       "created_at": "2026-10-07T07:20:08.467Z"
+    },
+    {
+      "id": "3ae99b32-2c79-4179-9802-e4b2136d89c1",
+      "ticket_id": "52f5afe0-5ff9-43b4-bba8-3562847c110e",
+      "file_name": "test_script.py",
+      "file_type": "LOG",
+      "file_path": "https://kmmsbwhivscxmmyscvtz.supabase.co/storage/v1/object/public/evidence-files/52f5afe0-5ff9-43b4-bba8-3562847c110e/1791366676521_test_script.py",
+      "file_size": 173,
+      "extracted_context": "def calculate_metrics(data):\n    total = 0\n    for val in data:\n      total += val['amount']\n    average = total / len(data)\n    return average\n\nprint(calculate_metrics([]))",
+      "created_at": "2026-10-07T09:51:17.240Z"
+    },
+    {
+      "id": "169e8110-1784-492a-ba60-c5a1f0a435ba",
+      "ticket_id": "7a1ac236-2bf9-45c2-8409-425089b7b704",
+      "file_name": "test_visualize.py",
+      "file_type": "LOG",
+      "file_path": "https://kmmsbwhivscxmmyscvtz.supabase.co/storage/v1/object/public/evidence-files/7a1ac236-2bf9-45c2-8409-425089b7b704/1791367996062_test_visualize.py",
+      "file_size": 39,
+      "extracted_context": "print(What does the Visualize button do",
+      "created_at": "2026-10-07T10:13:16.739Z"
     }
   ],
   "evidence_correlations": [
@@ -221,6 +289,24 @@
       "correlation_type": "CONTEXTUAL_LINK",
       "description": "Observed user symptoms correlate with error logs.",
       "created_at": "2026-10-07T09:47:21.148Z"
+    },
+    {
+      "id": "0ca9e0a4-fa0d-4cbb-91f7-b3d0f8b2ef2b",
+      "ticket_id": "52f5afe0-5ff9-43b4-bba8-3562847c110e",
+      "source_evidence_id": null,
+      "target_evidence_id": null,
+      "correlation_type": "CONTEXTUAL_LINK",
+      "description": "Reported problem statement matches exception point in source code.",
+      "created_at": "2026-10-07T09:51:17.240Z"
+    },
+    {
+      "id": "b6217651-e483-41b8-a587-d02a2e99fca8",
+      "ticket_id": "7a1ac236-2bf9-45c2-8409-425089b7b704",
+      "source_evidence_id": "169e8110-1784-492a-ba60-c5a1f0a435ba",
+      "target_evidence_id": null,
+      "correlation_type": "CONTEXTUAL_LINK",
+      "description": "Syntax tokenizer failure on line: \"print(What does the Visualize button do\"",
+      "created_at": "2026-10-07T10:13:16.740Z"
     }
   ],
   "knowledge_base": [
